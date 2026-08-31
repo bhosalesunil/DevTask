@@ -7,11 +7,11 @@ import {
   CheckSquare,
   Users,
   User,
-  Shield,
   Layers,
   X,
   Settings,
   Sparkles,
+  ChevronDown,
 } from 'lucide-react';
 
 export const Sidebar = ({ isOpen = false, onClose = () => {} }) => {
@@ -58,8 +58,8 @@ export const Sidebar = ({ isOpen = false, onClose = () => {} }) => {
         </div>
 
         {/* Navigation Section */}
-        <div className="sidebar-nav">
-          <div className="space-y-1">
+        <div className="sidebar-nav flex flex-col justify-between flex-1">
+          <div className="space-y-1.5">
             {navItems.map((item) => (
               <NavLink
                 key={item.path}
@@ -75,39 +75,44 @@ export const Sidebar = ({ isOpen = false, onClose = () => {} }) => {
             ))}
           </div>
 
-          {/* Pro Upgrade / Platform Highlight Banner Card */}
-          <div className="mt-8 p-4 rounded-2xl bg-gradient-to-br from-indigo-50/90 to-purple-50/90 border border-indigo-100/80 text-center space-y-2">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white flex items-center justify-center mx-auto shadow-sm">
+          {/* DevTask Workspace Promo Card */}
+          <div className="mt-8 p-4 rounded-2xl bg-indigo-50/70 border border-indigo-100/60 text-center space-y-2">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 text-white flex items-center justify-center mx-auto shadow-sm">
               <Sparkles size={18} />
             </div>
             <h4 className="font-extrabold text-xs text-slate-900">DevTask Workspace</h4>
             <p className="text-[11px] font-medium text-slate-500 leading-tight">
-              Real-time collaboration & Kanban workflows.
+              Real-time collaboration &amp; Kanban workflows.
             </p>
           </div>
         </div>
 
         {/* Bottom User Profile Section */}
         <div className="sidebar-footer">
-          <div className="user-section flex items-center justify-between p-2.5 rounded-xl border border-slate-100 bg-slate-50/80">
+          <div
+            className="user-section flex items-center justify-between p-2.5 rounded-xl border border-slate-100 bg-slate-50/70 hover:bg-slate-100/80 transition cursor-pointer"
+            onClick={() => navigate('/profile')}
+          >
             <div className="flex items-center gap-2.5 overflow-hidden">
               <img
-                src={user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'Dev'}`}
+                src={user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'kuldip'}`}
                 alt={user?.name}
                 className="w-9 h-9 rounded-full object-cover border border-slate-200 shadow-xs flex-shrink-0"
               />
               <div className="overflow-hidden">
-                <h4 className="font-extrabold text-xs text-slate-900 truncate">{user?.name || 'Sunil Sharma'}</h4>
-                <span className="text-[10px] font-extrabold text-indigo-600 flex items-center gap-1 uppercase tracking-wide">
-                  <Shield size={10} />
+                <div className="flex items-center gap-1">
+                  <h4 className="font-extrabold text-xs text-slate-900 truncate">{user?.name || 'kuldip mane'}</h4>
+                  <ChevronDown size={12} className="text-slate-400 flex-shrink-0" />
+                </div>
+                <span className="text-[10px] font-extrabold text-slate-400 block uppercase tracking-wider">
                   {user?.role === 'admin' ? 'ADMIN' : 'DEVELOPER'}
                 </span>
               </div>
             </div>
 
             <button
-              onClick={() => {
-                onClose();
+              onClick={(e) => {
+                e.stopPropagation();
                 navigate('/profile');
               }}
               className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-white rounded-lg transition"
@@ -174,14 +179,13 @@ export const Sidebar = ({ isOpen = false, onClose = () => {} }) => {
           }
           .brand-sub {
             font-size: 0.65rem;
-            color: #4f46e5;
+            color: #6366f1;
             text-transform: uppercase;
             letter-spacing: 0.08em;
             font-weight: 800;
           }
           .sidebar-nav {
             padding: 1.25rem 0.85rem;
-            flex: 1;
           }
           .nav-link {
             display: flex;
@@ -189,7 +193,7 @@ export const Sidebar = ({ isOpen = false, onClose = () => {} }) => {
             gap: 0.85rem;
             padding: 0.7rem 0.9rem;
             border-radius: 0.85rem;
-            color: #64748b;
+            color: #475569;
             text-decoration: none;
             font-size: 0.875rem;
             font-weight: 600;
@@ -201,7 +205,7 @@ export const Sidebar = ({ isOpen = false, onClose = () => {} }) => {
           }
           .nav-link.active {
             color: #ffffff;
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            background: linear-gradient(135deg, #5b5ff7 0%, #4f46e5 100%);
             box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
             font-weight: 700;
           }

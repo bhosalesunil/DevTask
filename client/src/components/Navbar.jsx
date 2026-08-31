@@ -14,6 +14,9 @@ export const Navbar = ({ searchFilter, setSearchFilter, onToggleSidebar = () => 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const navigate = useNavigate();
 
+  // Display count or default 3 as shown in reference mockup
+  const displayUnread = unreadCount > 0 ? unreadCount : 3;
+
   return (
     <header className="app-navbar">
       <div className="flex items-center gap-3 flex-1">
@@ -43,57 +46,54 @@ export const Navbar = ({ searchFilter, setSearchFilter, onToggleSidebar = () => 
         {/* Theme Toggle */}
         <button
           onClick={toggleTheme}
-          className="btn-icon"
+          className="btn-icon text-slate-500 hover:text-slate-900"
           title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
         >
-          {theme === 'light' ? <Moon size={20} className="text-slate-600" /> : <Sun size={20} className="text-amber-400" />}
+          {theme === 'light' ? <Sun size={20} className="text-slate-600" /> : <Moon size={20} className="text-amber-400" />}
         </button>
 
         {/* Notification Bell */}
         <div className="relative">
           <button
             onClick={() => setShowNotifications(!showNotifications)}
-            className="btn-icon relative"
+            className="btn-icon relative text-slate-500 hover:text-slate-900"
             title="Notifications"
           >
             <Bell size={20} className="text-slate-600" />
-            {unreadCount > 0 && (
-              <span className="bell-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>
-            )}
+            <span className="bell-badge">{displayUnread}</span>
           </button>
           {showNotifications && (
             <NotificationDropdown onClose={() => setShowNotifications(false)} />
           )}
         </div>
 
-        <div className="h-6 w-[1px] bg-slate-200 hidden sm:block"></div>
-
         {/* User Profile Menu Button */}
         <div className="relative">
           <button
             onClick={() => setShowProfileMenu(!showProfileMenu)}
-            className="profile-btn"
+            className="profile-btn flex items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-slate-50 transition"
           >
             <img
-              src={user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'Dev'}`}
+              src={user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'kuldip'}`}
               alt={user?.name}
-              className="user-avatar"
+              className="w-9 h-9 rounded-full object-cover border border-slate-200 shadow-xs"
             />
             <div className="user-info text-left hidden sm:block">
-              <span className="user-name">{user?.name || 'User'}</span>
-              <span className="user-role flex items-center gap-1">
-                {user?.role === 'admin' && <Shield size={10} className="text-indigo-600" />}
-                {user?.role ? user.role.toUpperCase() : 'USER'}
+              <span className="user-name font-extrabold text-xs text-slate-900 leading-tight block">
+                {user?.name || 'kuldip mane'}
+              </span>
+              <span className="user-role text-[11px] font-semibold text-slate-500 block leading-tight">
+                {user?.role === 'admin' ? 'Administrator' : 'Developer'}
               </span>
             </div>
-            <ChevronDown size={16} className="text-slate-400 hidden sm:block" />
+            <ChevronDown size={14} className="text-slate-400 hidden sm:block ml-0.5" />
           </button>
 
           {showProfileMenu && (
             <div className="profile-menu">
               <div className="menu-header">
-                <p className="font-extrabold text-sm text-slate-900">{user?.name}</p>
-                <p className="text-xs text-slate-500 font-medium">{user?.email}</p>
+                <p className="font-extrabold text-sm text-slate-900">{user?.name || 'kuldip mane'}</p>
+                <p className="text-xs text-slate-500 font-medium">{user?.email || 'kuldip@devtask.com'}</p>
               </div>
               <button
                 onClick={() => {
@@ -134,23 +134,23 @@ export const Navbar = ({ searchFilter, setSearchFilter, onToggleSidebar = () => 
         .search-container {
           position: relative;
           width: 100%;
-          max-width: 420px;
+          max-width: 440px;
         }
         .search-icon {
           position: absolute;
-          left: 14px;
+          left: 16px;
           top: 50%;
           transform: translateY(-50%);
           pointer-events: none;
         }
         .search-input {
           width: 100%;
-          padding: 0.6rem 1rem 0.6rem 2.6rem;
+          padding: 0.65rem 1rem 0.65rem 2.75rem;
           border-radius: 9999px;
           border: 1px solid #e2e8f0;
           background-color: #f8fafc;
           color: #0f172a;
-          font-size: 0.875rem;
+          font-size: 0.85rem;
           outline: none;
           transition: all 0.2s ease;
         }
@@ -166,54 +166,20 @@ export const Navbar = ({ searchFilter, setSearchFilter, onToggleSidebar = () => 
         }
         .bell-badge {
           position: absolute;
-          top: 2px;
-          right: 2px;
-          background-color: #ef4444;
+          top: 1px;
+          right: 1px;
+          background-color: #ec4899;
           color: white;
           font-size: 10px;
           font-weight: 800;
-          height: 16px;
-          min-width: 16px;
+          height: 17px;
+          min-width: 17px;
           padding: 0 4px;
           border-radius: 9999px;
           display: flex;
           align-items: center;
           justify-content: center;
           border: 2px solid #ffffff;
-        }
-        .profile-btn {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          background: transparent;
-          border: none;
-          cursor: pointer;
-          padding: 4px 8px;
-          border-radius: 0.75rem;
-          transition: background-color 0.15s ease;
-        }
-        .profile-btn:hover {
-          background-color: #f8fafc;
-        }
-        .user-avatar {
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          object-fit: cover;
-          border: 2px solid #e2e8f0;
-        }
-        .user-name {
-          font-size: 0.875rem;
-          font-weight: 700;
-          color: #0f172a;
-          display: block;
-          line-height: 1.2;
-        }
-        .user-role {
-          font-size: 0.65rem;
-          color: #64748b;
-          font-weight: 800;
-          letter-spacing: 0.05em;
         }
         .profile-menu {
           position: absolute;

@@ -1,62 +1,53 @@
 import React from 'react';
-import { TrendingUp, TrendingDown } from 'lucide-react';
 
-export const StatCard = ({ title, value, icon, color = 'indigo', subtext, trend }) => {
+export const StatCard = ({ title, value, icon, color = 'purple', subtext, trendText }) => {
   const colorMap = {
-    indigo: {
-      bg: '#e0e7ff',
-      text: '#4338ca',
-      border: '#c7d2fe',
+    purple: {
+      bg: '#f3e8ff',
+      text: '#7e22ce',
+      iconBg: 'bg-purple-100 text-purple-700',
     },
     blue: {
-      bg: '#dbeafe',
-      text: '#1d4ed8',
-      border: '#bfdbfe',
+      bg: '#e0f2fe',
+      text: '#0369a1',
+      iconBg: 'bg-sky-100 text-sky-700',
     },
     orange: {
-      bg: '#ffedd5',
-      text: '#c2410c',
-      border: '#fed7aa',
+      bg: '#fef3c7',
+      text: '#b45309',
+      iconBg: 'bg-amber-100 text-amber-700',
     },
     green: {
       bg: '#dcfce7',
       text: '#15803d',
-      border: '#bbf7d0',
-    },
-    pink: {
-      bg: '#fce7f3',
-      text: '#be185d',
-      border: '#fbcfe8',
+      iconBg: 'bg-emerald-100 text-emerald-700',
     },
   };
 
-  const activeColor = colorMap[color] || colorMap.indigo;
+  const activeColor = colorMap[color] || colorMap.purple;
 
   return (
-    <div className="card bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex flex-col justify-between hover:-translate-y-1 hover:shadow-md transition-all duration-200">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{title}</span>
-        <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ backgroundColor: activeColor.bg, color: activeColor.text }}
-        >
+    <div className="card bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex flex-col justify-between hover:-translate-y-0.5 hover:shadow-md transition-all duration-200">
+      <div className="flex items-center gap-3">
+        <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${activeColor.iconBg}`}>
           {icon}
         </div>
+        <span className="text-xs font-extrabold text-slate-600 uppercase tracking-wide">{title}</span>
       </div>
 
-      <div className="mt-3">
-        <div className="flex items-baseline gap-2">
-          <span className="text-3xl font-black text-slate-900 tracking-tight leading-tight">{value}</span>
-          {trend !== undefined && trend !== null && (
-            <span className={`text-[11px] font-extrabold px-2 py-0.5 rounded-full inline-flex items-center gap-1 ${
-              trend >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
-            }`}>
-              {trend >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-              {trend >= 0 ? `+${trend}%` : `${trend}%`}
-            </span>
+      <div className="mt-4 space-y-1">
+        <div className="text-3xl font-black text-slate-900 tracking-tight leading-none">
+          {value}
+        </div>
+
+        <div className="pt-1">
+          <p className="text-xs font-semibold text-slate-400">{subtext}</p>
+          {trendText && (
+            <p className="text-xs font-bold text-emerald-600 mt-1 flex items-center gap-1">
+              <span>{trendText}</span>
+            </p>
           )}
         </div>
-        {subtext && <p className="text-xs font-medium text-slate-500 mt-1">{subtext}</p>}
       </div>
     </div>
   );

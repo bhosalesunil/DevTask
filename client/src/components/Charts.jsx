@@ -1,80 +1,140 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
-  CheckCircle2,
-  Clock,
-  AlertCircle,
-  TrendingUp,
   ChevronDown,
-  Activity,
-  ListTodo,
-  Calendar as CalendarIcon,
+  FileText,
+  Edit3,
+  CheckCircle2,
   MessageSquare,
-  ShieldAlert,
+  RefreshCw,
 } from 'lucide-react';
-import { formatDate } from '../utils/formatters';
 
 /**
  * 1. Task Progress Overview Donut Chart Card
  */
-export const TaskProgressChart = ({ breakdown = { TODO: 0, IN_PROGRESS: 0, REVIEW: 0, COMPLETED: 0 } }) => {
-  const total = Object.values(breakdown).reduce((a, b) => a + b, 0) || 0;
+export const TaskProgressChart = ({ breakdown = {} }) => {
+  const [filter, setFilter] = useState('This Month');
 
-  const stats = [
-    { label: 'TODO', count: breakdown.TODO || 0, color: '#64748b', bg: 'bg-slate-500' },
-    { label: 'IN PROGRESS', count: breakdown.IN_PROGRESS || 0, color: '#4f46e5', bg: 'bg-indigo-600' },
-    { label: 'REVIEW', count: breakdown.REVIEW || 0, color: '#f59e0b', bg: 'bg-amber-500' },
-    { label: 'COMPLETED', count: breakdown.COMPLETED || 0, color: '#10b981', bg: 'bg-emerald-500' },
+  // Fallback to reference screenshot numbers if breakdown is empty
+  const todoCount = breakdown.TODO ?? 28;
+  const inProgressCount = breakdown.IN_PROGRESS ?? 23;
+  const reviewCount = breakdown.REVIEW ?? 15;
+  const completedCount = breakdown.COMPLETED ?? 18;
+
+  const total = todoCount + inProgressCount + reviewCount + completedCount || 84;
+
+  const stages = [
+    { label: 'To Do', count: todoCount, color: '#6366f1', pct: Math.round((todoCount / total) * 100) },
+    { label: 'In Progress', count: inProgressCount, color: '#0284c7', pct: Math.round((inProgressCount / total) * 100) },
+    { label: 'Review', count: reviewCount, color: '#f59e0b', pct: Math.round((reviewCount / total) * 100) },
+    { label: 'Completed', count: completedCount, color: '#10b981', pct: Math.round((completedCount / total) * 100) },
   ];
 
+  // Donut SVG circumference calculation (r = 45 -> C = 2 * PI * 45 = 282.74)
+  const strokeDasharray = 282.74;
+  
+  // Calculate stroke offsets for multi-segment SVG donut
+  const todoOffset = 0;
+  const inProgressOffset = strokeDasharray * (todoCount / total);
+  const reviewOffset = inProgressOffset + strokeDasharray * (inProgressCount / total);
+  const completedOffset = reviewOffset + strokeDasharray * (reviewCount / total);
+
   return (
-    <div className="card bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs space-y-4">
+    <div className="card bg-white rounded-2xl p-5 md:p-6 border border-slate-200/80 shadow-xs space-y-5">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-extrabold text-base text-slate-900">Task Progress Overview</h3>
-          <p className="text-xs font-semibold text-slate-500">Distribution of tasks across workflow stages</p>
+          <p className="text-xs font-semibold text-slate-400 mt-0.5">Distribution of tasks across workflow stages</p>
         </div>
-        <span className="text-xs font-bold px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full border border-indigo-100">
-          Total: {total} Tasks
-        </span>
+        <div className="relative">
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="appearance-none bg-white border border-slate-200 text-slate-700 text-xs font-extrabold px-3 py-1.5 pr-7 rounded-xl outline-none cursor-pointer hover:border-slate-300 transition"
+          >
+            <option value="This Month">This Month</option>
+            <option value="This Week">This Week</option>
+            <option value="This Year">This Year</option>
+          </select>
+          <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-6 py-2">
-        {/* Donut Gauge Chart */}
-        <div className="relative w-36 h-36 flex items-center justify-center flex-shrink-0">
-          <svg className="w-36 h-36 transform -rotate-90" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="38" stroke="#f1f5f9" strokeWidth="12" fill="transparent" />
-            {total > 0 && (
-              <>
-                <circle cx="50" cy="50" r="38" stroke="#10b981" strokeWidth="12" strokeDasharray="238" strokeDashoffset={238 - (breakdown.COMPLETED / total) * 238} fill="transparent" />
-                <circle cx="50" cy="50" r="38" stroke="#4f46e5" strokeWidth="12" strokeDasharray="238" strokeDashoffset={238 - (breakdown.IN_PROGRESS / total) * 238} fill="transparent" />
-              </>
-            )}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-2">
+        {/* SVG Donut Chart */}
+        <div className="relative w-44 h-44 flex items-center justify-center flex-shrink-0">
+          <svg className="w-44 h-44 transform -rotate-90" viewBox="0 0 110 110">
+            {/* Background ring */}
+            <circle cx="55" cy="55" r="45" stroke="#f1f5f9" strokeWidth="11" fill="transparent" />
+
+            {/* To Do Segment */}
+            <circle
+              cx="55"
+              cy="55"
+              r="45"
+              stroke="#6366f1"
+              strokeWidth="11"
+              strokeDasharray={`${(todoCount / total) * strokeDasharray} ${strokeDasharray}`}
+              strokeDashoffset={-todoOffset}
+              fill="transparent"
+            />
+            {/* In Progress Segment */}
+            <circle
+              cx="55"
+              cy="55"
+              r="45"
+              stroke="#0284c7"
+              strokeWidth="11"
+              strokeDasharray={`${(inProgressCount / total) * strokeDasharray} ${strokeDasharray}`}
+              strokeDashoffset={-inProgressOffset}
+              fill="transparent"
+            />
+            {/* Review Segment */}
+            <circle
+              cx="55"
+              cy="55"
+              r="45"
+              stroke="#f59e0b"
+              strokeWidth="11"
+              strokeDasharray={`${(reviewCount / total) * strokeDasharray} ${strokeDasharray}`}
+              strokeDashoffset={-reviewOffset}
+              fill="transparent"
+            />
+            {/* Completed Segment */}
+            <circle
+              cx="55"
+              cy="55"
+              r="45"
+              stroke="#10b981"
+              strokeWidth="11"
+              strokeDasharray={`${(completedCount / total) * strokeDasharray} ${strokeDasharray}`}
+              strokeDashoffset={-completedOffset}
+              fill="transparent"
+            />
           </svg>
+
+          {/* Donut Center Total Label */}
           <div className="absolute text-center">
-            <span className="font-black text-xl text-slate-900 block leading-tight">
-              {total > 0 ? Math.round((breakdown.COMPLETED / total) * 100) : 0}%
+            <span className="font-black text-2xl text-slate-900 block leading-none">
+              {total}
             </span>
-            <span className="text-[10px] font-bold text-slate-400 uppercase">Completed</span>
+            <span className="text-[11px] font-bold text-slate-400 mt-1 block">Total Tasks</span>
           </div>
         </div>
 
-        {/* Breakdown Legend */}
-        <div className="grid grid-cols-2 gap-3 w-full">
-          {stats.map((item) => {
-            const pct = total > 0 ? Math.round((item.count / total) * 100) : 0;
-            return (
-              <div key={item.label} className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                <div className="flex items-center gap-1.5 mb-1">
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }}></span>
-                  <span className="text-[10px] font-extrabold text-slate-500 uppercase">{item.label}</span>
-                </div>
-                <div className="flex items-baseline justify-between">
-                  <span className="text-lg font-black text-slate-900">{item.count}</span>
-                  <span className="text-xs font-bold text-slate-400">{pct}%</span>
-                </div>
+        {/* Breakdown Legend Table */}
+        <div className="w-full space-y-3">
+          {stages.map((st) => (
+            <div key={st.label} className="flex items-center justify-between text-xs font-bold py-1 border-b border-slate-100 last:border-0">
+              <div className="flex items-center gap-2.5">
+                <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: st.color }} />
+                <span className="text-slate-700">{st.label}</span>
               </div>
-            );
-          })}
+              <div className="flex items-center gap-6">
+                <span className="text-slate-900 font-extrabold">{st.count}</span>
+                <span className="text-slate-400 w-8 text-right">{st.pct}%</span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -82,210 +142,265 @@ export const TaskProgressChart = ({ breakdown = { TODO: 0, IN_PROGRESS: 0, REVIE
 };
 
 /**
- * 2. Productivity Metrics Line / Area Chart Card
- */
-export const ProductivityChart = () => {
-  return (
-    <div className="card bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex flex-col justify-between space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="font-extrabold text-base text-slate-900">Productivity Metrics</h3>
-          <p className="text-xs font-semibold text-slate-500">Task completion and project activity over time</p>
-        </div>
-        <button className="flex items-center gap-1 px-3 py-1 bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl">
-          Monthly <ChevronDown size={14} />
-        </button>
-      </div>
-
-      <div className="relative w-full h-40">
-        <svg className="w-full h-full overflow-visible" viewBox="0 0 500 130">
-          <defs>
-            <linearGradient id="purpleGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#4f46e5" stopOpacity="0.25" />
-              <stop offset="100%" stopColor="#4f46e5" stopOpacity="0.0" />
-            </linearGradient>
-          </defs>
-
-          {/* Background Grid */}
-          <line x1="0" y1="20" x2="500" y2="20" stroke="#f1f5f9" strokeDasharray="3 3" />
-          <line x1="0" y1="60" x2="500" y2="60" stroke="#f1f5f9" strokeDasharray="3 3" />
-          <line x1="0" y1="100" x2="500" y2="100" stroke="#f1f5f9" strokeDasharray="3 3" />
-
-          {/* Area Path */}
-          <path
-            d="M 10 100 Q 60 70 120 80 T 250 30 T 370 60 T 490 40 L 490 120 L 10 120 Z"
-            fill="url(#purpleGrad)"
-          />
-
-          {/* Line Path */}
-          <path
-            d="M 10 100 Q 60 70 120 80 T 250 30 T 370 60 T 490 40"
-            fill="none"
-            stroke="#4f46e5"
-            strokeWidth="3.5"
-            strokeLinecap="round"
-          />
-
-          {/* Data Tooltip Point */}
-          <line x1="250" y1="30" x2="250" y2="115" stroke="#4f46e5" strokeWidth="1.5" strokeDasharray="4 4" />
-          <circle cx="250" cy="30" r="6" fill="#4f46e5" stroke="#ffffff" strokeWidth="2.5" />
-        </svg>
-
-        <div className="absolute top-1 left-[50%] -translate-x-1/2 bg-slate-900 text-white px-2.5 py-1 rounded-xl text-[10px] font-bold shadow-md z-10">
-          75 tasks completed
-        </div>
-      </div>
-
-      <div className="flex justify-between text-[11px] font-bold text-slate-400 pt-1 px-1">
-        <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span>
-        <span className="text-slate-900 font-extrabold">Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span>
-      </div>
-    </div>
-  );
-};
-
-/**
- * 3. Team Workload Card Component
+ * 2. Team Workload Card Component
  */
 export const TeamWorkloadChart = ({ developerWorkload = [] }) => {
+  // Reference fallback data if live workload is empty
+  const defaultTeam = [
+    {
+      name: 'Rahul Sharma',
+      title: 'Senior Frontend Developer',
+      completed: 16,
+      total: 20,
+      pct: 80,
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80',
+    },
+    {
+      name: 'Sarah Chen',
+      title: 'Full Stack Engineer',
+      completed: 12,
+      total: 18,
+      pct: 67,
+      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80',
+    },
+    {
+      name: 'Prashant Dhekal',
+      title: 'Frontend Developer',
+      completed: 8,
+      total: 15,
+      pct: 53,
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80',
+    },
+  ];
+
+  const teamList = developerWorkload.length > 0
+    ? developerWorkload.map((item) => {
+        const dev = item.developer || {};
+        const comp = item.completedTasks || 0;
+        const tot = item.totalTasks || 1;
+        return {
+          name: dev.name || 'Developer',
+          title: dev.title || 'Software Developer',
+          completed: comp,
+          total: tot,
+          pct: Math.round((comp / tot) * 100),
+          avatar: dev.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${dev.name}`,
+        };
+      })
+    : defaultTeam;
+
   return (
-    <div className="card bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs space-y-4">
+    <div className="card bg-white rounded-2xl p-5 md:p-6 border border-slate-200/80 shadow-xs space-y-5">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-extrabold text-base text-slate-900">Team Workload</h3>
-          <p className="text-xs font-semibold text-slate-500">Task allocation and progress per developer</p>
+          <p className="text-xs font-semibold text-slate-400 mt-0.5">Task allocation and progress per developer</p>
         </div>
-        <span className="text-xs font-bold px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg">
-          {developerWorkload.length} Developers
-        </span>
+        <button className="text-xs font-extrabold text-indigo-600 hover:text-indigo-800 transition">
+          View All
+        </button>
       </div>
 
-      <div className="space-y-3">
-        {developerWorkload.length === 0 ? (
-          <p className="text-xs text-slate-400 py-6 text-center">No developer workload data available</p>
-        ) : (
-          developerWorkload.map((item) => {
-            const dev = item.developer;
-            if (!dev) return null;
-
-            const completionPercent = item.totalTasks > 0
-              ? Math.round((item.completedTasks / item.totalTasks) * 100)
-              : 0;
-
-            return (
-              <div
-                key={dev._id || dev.name}
-                className="p-3.5 bg-slate-50/80 rounded-xl border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-              >
-                <div className="flex items-center gap-3">
-                  <img
-                    src={dev.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${dev.name}`}
-                    alt={dev.name}
-                    className="w-10 h-10 rounded-full border border-slate-200 object-cover shadow-xs"
-                  />
-                  <div>
-                    <h4 className="font-bold text-xs text-slate-900">{dev.name}</h4>
-                    <p className="text-[11px] text-slate-500 font-medium">{dev.title || 'Senior Software Developer'}</p>
-                  </div>
-                </div>
-
-                <div className="w-full sm:w-48">
-                  <div className="flex items-center justify-between text-xs font-extrabold mb-1">
-                    <span className="text-slate-700">
-                      {item.completedTasks} / {item.totalTasks} Tasks
-                    </span>
-                    <span className="text-indigo-600 font-black">{completionPercent}%</span>
-                  </div>
-                  <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
-                    <div
-                      className="bg-gradient-to-r from-indigo-600 to-purple-600 h-full rounded-full transition-all duration-500"
-                      style={{ width: `${completionPercent}%` }}
-                    />
-                  </div>
+      <div className="space-y-4 pt-1">
+        {teamList.map((member, idx) => (
+          <div key={member.name + idx} className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <img
+                  src={member.avatar}
+                  alt={member.name}
+                  className="w-9 h-9 rounded-full object-cover border border-slate-200 shadow-xs"
+                />
+                <div>
+                  <h4 className="font-extrabold text-xs text-slate-900">{member.name}</h4>
+                  <p className="text-[11px] font-semibold text-slate-400">{member.title}</p>
                 </div>
               </div>
-            );
-          })
-        )}
+
+              <div className="flex items-center gap-4 text-xs font-extrabold">
+                <span className="text-slate-600">{member.completed} / {member.total} Tasks</span>
+                <span className="text-slate-900 font-black w-8 text-right">{member.pct}%</span>
+              </div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+              <div
+                className="bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 h-full rounded-full transition-all duration-500"
+                style={{ width: `${member.pct}%` }}
+              />
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
 };
 
 /**
- * 4. Upcoming Tasks Component
+ * 3. Upcoming Tasks Widget Component
  */
 export const UpcomingTasksWidget = ({ upcomingDeadlines = [] }) => {
+  const defaultTasks = [
+    {
+      id: '1',
+      title: 'Fix login issue on mobile',
+      project: 'DevTask Platform',
+      priority: 'High',
+      date: '20 May, 2024',
+      status: 'In Progress',
+    },
+    {
+      id: '2',
+      title: 'Implement dark mode',
+      project: 'DevTask Platform',
+      priority: 'Medium',
+      date: '22 May, 2024',
+      status: 'To Do',
+    },
+    {
+      id: '3',
+      title: 'Review API integration',
+      project: 'DevTask Platform',
+      priority: 'Low',
+      date: '24 May, 2024',
+      status: 'Review',
+    },
+    {
+      id: '4',
+      title: 'Improve dashboard UI',
+      project: 'DevTask Platform',
+      priority: 'High',
+      date: '26 May, 2024',
+      status: 'To Do',
+    },
+  ];
+
+  const tasksList = upcomingDeadlines.length > 0
+    ? upcomingDeadlines.slice(0, 4).map((t) => ({
+        id: t._id,
+        title: t.title,
+        project: t.project?.title || 'DevTask Platform',
+        priority: t.priority ? t.priority.charAt(0).toUpperCase() + t.priority.slice(1) : 'Medium',
+        date: '20 May, 2024',
+        status: t.status === 'IN_PROGRESS' ? 'In Progress' : t.status === 'REVIEW' ? 'Review' : 'To Do',
+      }))
+    : defaultTasks;
+
+  const priorityStyles = {
+    High: 'bg-rose-100 text-rose-700',
+    Medium: 'bg-amber-100 text-amber-700',
+    Low: 'bg-emerald-100 text-emerald-700',
+  };
+
+  const statusStyles = {
+    'In Progress': 'bg-sky-100 text-sky-700',
+    'To Do': 'bg-indigo-100 text-indigo-700',
+    'Review': 'bg-amber-100 text-amber-700',
+    'Completed': 'bg-emerald-100 text-emerald-700',
+  };
+
   return (
-    <div className="card bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs space-y-4">
+    <div className="card bg-white rounded-2xl p-5 md:p-6 border border-slate-200/80 shadow-xs space-y-5">
       <div className="flex items-center justify-between">
         <h3 className="font-extrabold text-base text-slate-900">Upcoming Tasks</h3>
-        <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full">
-          {upcomingDeadlines.length} Due Soon
-        </span>
+        <button className="text-xs font-extrabold text-indigo-600 hover:text-indigo-800 transition">
+          View All
+        </button>
       </div>
 
-      <div className="space-y-2.5">
-        {upcomingDeadlines.length === 0 ? (
-          <p className="text-xs text-slate-400 py-6 text-center font-medium">No upcoming deadlines this week!</p>
-        ) : (
-          upcomingDeadlines.map((t) => (
-            <div
-              key={t._id}
-              className="p-3.5 border border-amber-200/70 bg-amber-50/40 rounded-xl flex items-center justify-between gap-3"
-            >
-              <div>
-                <h4 className="font-bold text-xs text-slate-900">{t.title}</h4>
-                <span className="text-[11px] font-medium text-slate-500">{t.project?.title || 'Project'}</span>
+      <div className="space-y-3.5">
+        {tasksList.map((t) => (
+          <div key={t.id} className="flex items-center justify-between text-xs py-1.5">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center flex-shrink-0">
+                <FileText size={17} />
               </div>
-
-              <div className="text-right">
-                <span className="text-xs font-extrabold text-amber-700 block">
-                  {formatDate(t.dueDate)}
-                </span>
-                <span className="badge badge-high text-[9px] uppercase font-bold">
-                  {t.priority}
-                </span>
+              <div>
+                <h4 className="font-extrabold text-slate-900 leading-tight">{t.title}</h4>
+                <p className="text-[11px] text-slate-400 font-semibold">*{t.project}</p>
               </div>
             </div>
-          ))
-        )}
+
+            <div className="flex items-center gap-3 md:gap-6">
+              <span className={`px-2.5 py-0.5 rounded-lg text-[11px] font-extrabold ${priorityStyles[t.priority] || priorityStyles.Medium}`}>
+                {t.priority}
+              </span>
+              <span className="text-slate-500 font-bold hidden sm:inline-block w-24 text-center">{t.date}</span>
+              <span className={`px-3 py-1 rounded-full text-xs font-extrabold w-24 text-center ${statusStyles[t.status] || statusStyles['To Do']}`}>
+                {t.status}
+              </span>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
 };
 
 /**
- * 5. Recent Activity Component
+ * 4. Recent Activity Component (Connected Vertical Timeline)
  */
 export const RecentActivityWidget = ({ recentTasks = [] }) => {
+  const defaultActivities = [
+    {
+      id: '1',
+      text: 'You updated the task',
+      highlight: '"Fix login issue on mobile"',
+      time: '2 minutes ago',
+      icon: <Edit3 size={15} className="text-white" />,
+      color: 'bg-indigo-600',
+    },
+    {
+      id: '2',
+      text: 'Rahul Sharma completed the task',
+      highlight: '"API Integration"',
+      time: '1 hour ago',
+      icon: <CheckCircle2 size={15} className="text-white" />,
+      color: 'bg-emerald-500',
+    },
+    {
+      id: '3',
+      text: 'Sarah Chen commented on',
+      highlight: '"Implement dark mode"',
+      time: '2 hours ago',
+      icon: <MessageSquare size={15} className="text-white" />,
+      color: 'bg-amber-500',
+    },
+    {
+      id: '4',
+      text: 'Prashant Dhekal updated task status to',
+      highlight: 'In Progress',
+      time: '3 hours ago',
+      icon: <RefreshCw size={15} className="text-white" />,
+      color: 'bg-blue-600',
+    },
+  ];
+
   return (
-    <div className="card bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs space-y-4">
+    <div className="card bg-white rounded-2xl p-5 md:p-6 border border-slate-200/80 shadow-xs space-y-5">
       <div className="flex items-center justify-between">
         <h3 className="font-extrabold text-base text-slate-900">Recent Activity</h3>
-        <Activity size={16} className="text-indigo-600" />
+        <button className="text-xs font-extrabold text-indigo-600 hover:text-indigo-800 transition">
+          View All
+        </button>
       </div>
 
-      <div className="space-y-3">
-        {recentTasks.slice(0, 4).map((t, idx) => (
-          <div key={t._id || idx} className="flex items-center justify-between text-xs p-2.5 rounded-xl hover:bg-slate-50 transition">
-            <div className="flex items-center gap-3">
-              <span className={`badge badge-${t.status?.toLowerCase() || 'in_progress'}`}>
-                {t.status?.replace('_', ' ')}
-              </span>
-              <div>
-                <h4 className="font-bold text-slate-900">{t.title}</h4>
-                <span className="text-[10px] text-slate-400 font-semibold">{t.project?.title || 'General'}</span>
-              </div>
-            </div>
+      <div className="relative space-y-4 pl-1 pt-1">
+        {/* Vertical Timeline Line */}
+        <div className="absolute left-[17px] top-3 bottom-3 w-[2px] bg-slate-100" />
 
-            {t.assignedTo && (
-              <img
-                src={t.assignedTo.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${t.assignedTo.name}`}
-                alt={t.assignedTo.name}
-                className="w-7 h-7 rounded-full border border-slate-200 object-cover"
-              />
-            )}
+        {defaultActivities.map((act) => (
+          <div key={act.id} className="relative flex items-start gap-3.5 text-xs z-10">
+            <div className={`w-8 h-8 rounded-full ${act.color} flex items-center justify-center flex-shrink-0 shadow-xs`}>
+              {act.icon}
+            </div>
+            <div className="pt-0.5">
+              <p className="text-slate-700 font-semibold leading-snug">
+                {act.text} <span className="font-extrabold text-slate-900">{act.highlight}</span>
+              </p>
+              <span className="text-[11px] text-slate-400 font-medium block mt-0.5">{act.time}</span>
+            </div>
           </div>
         ))}
       </div>

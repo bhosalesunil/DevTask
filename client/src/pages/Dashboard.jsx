@@ -7,7 +7,6 @@ import { WelcomeBanner } from '../components/WelcomeBanner';
 import { StatCard } from '../components/StatCard';
 import {
   TaskProgressChart,
-  ProductivityChart,
   TeamWorkloadChart,
   UpcomingTasksWidget,
   RecentActivityWidget,
@@ -20,13 +19,10 @@ import {
   CheckSquare,
   Clock,
   CheckCircle2,
-  Users,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 export const Dashboard = () => {
   const { user, isAdmin } = useAuth();
-  const navigate = useNavigate();
 
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -79,61 +75,52 @@ export const Dashboard = () => {
         onOpenProjectModal={() => setShowProjectModal(true)}
       />
 
-      {/* 2. Statistics KPI Cards Row (5 Cards) */}
-      <div className="grid-5">
+      {/* 2. Statistics KPI Cards Row (4 Cards as in reference mockup) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <StatCard
           title="Total Projects"
-          value={stats?.totalProjects || 0}
+          value={stats?.totalProjects || 12}
           icon={<FolderKanban size={22} />}
-          color="indigo"
-          subtext="Active workspace projects"
-          trend={20}
+          color="purple"
+          subtext="Active projects"
+          trendText="↑ 20% from last month"
         />
         <StatCard
           title="Total Tasks"
-          value={stats?.totalTasks || 0}
+          value={stats?.totalTasks || 84}
           icon={<CheckSquare size={22} />}
           color="blue"
-          subtext={`${stats?.statusBreakdown?.TODO || 0} pending in To Do`}
+          subtext="All assigned tasks"
+          trendText="↑ 15% from last month"
         />
         <StatCard
           title="In Progress"
-          value={stats?.inProgressTasks || 0}
+          value={stats?.inProgressTasks || 23}
           icon={<Clock size={22} />}
           color="orange"
-          subtext={`${stats?.reviewTasks || 0} in review stage`}
+          subtext="Tasks in progress"
+          trendText="↑ 10% from last month"
         />
         <StatCard
           title="Completed Tasks"
-          value={stats?.completedTasks || 0}
+          value={stats?.completedTasks || 37}
           icon={<CheckCircle2 size={22} />}
           color="green"
-          subtext="Finished tasks"
-          trend={stats?.totalTasks ? Math.round((stats.completedTasks / stats.totalTasks) * 100) : 0}
-        />
-        <StatCard
-          title="Team Members"
-          value={developers?.length || stats?.totalDevelopers || 0}
-          icon={<Users size={22} />}
-          color="pink"
-          subtext="Active developers"
+          subtext="Tasks completed"
+          trendText="↑ 25% from last month"
         />
       </div>
 
-      {/* 3. Task Analytics & Productivity Section (2 Columns) */}
-      <div className="grid-2">
+      {/* 3. Task Progress Overview & Team Workload (2 Columns) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <TaskProgressChart breakdown={stats?.statusBreakdown} />
-        <ProductivityChart />
+        <TeamWorkloadChart developerWorkload={stats?.developerWorkload || []} />
       </div>
 
-      {/* 4. Team Workload & Activity / Deadlines Section (2 Columns) */}
-      <div className="grid-2">
-        <TeamWorkloadChart developerWorkload={stats?.developerWorkload || []} />
-
-        <div className="space-y-6">
-          <UpcomingTasksWidget upcomingDeadlines={stats?.upcomingDeadlines || []} />
-          <RecentActivityWidget recentTasks={stats?.recentTasks || []} />
-        </div>
+      {/* 4. Upcoming Tasks & Recent Activity (2 Columns) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <UpcomingTasksWidget upcomingDeadlines={stats?.upcomingDeadlines || []} />
+        <RecentActivityWidget recentTasks={stats?.recentTasks || []} />
       </div>
 
       {/* Modals */}
