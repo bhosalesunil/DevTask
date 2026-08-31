@@ -28,7 +28,31 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-:: 2. Initialize Git repo if not already initialized
+:: 2. Check and Configure Git User Identity (Name & Email)
+git config user.name >nul 2>&1
+set "NAME_STATUS=%errorlevel%"
+git config user.email >nul 2>&1
+set "EMAIL_STATUS=%errorlevel%"
+
+if %NAME_STATUS% neq 0 (
+    echo [SETUP] Git user name is not set.
+    set /p git_user_name="Enter your Name (Press Enter for 'Sunil Bhosale'): "
+    if "!git_user_name!"=="" set "git_user_name=Sunil Bhosale"
+    git config --global user.name "!git_user_name!"
+    echo [SUCCESS] Git user.name set to: !git_user_name!
+    echo.
+)
+
+if %EMAIL_STATUS% neq 0 (
+    echo [SETUP] Git user email is not set.
+    set /p git_user_email="Enter your Email (Press Enter for 'bhosalesunil@users.noreply.github.com'): "
+    if "!git_user_email!"=="" set "git_user_email=bhosalesunil@users.noreply.github.com"
+    git config --global user.email "!git_user_email!"
+    echo [SUCCESS] Git user.email set to: !git_user_email!
+    echo.
+)
+
+:: 3. Initialize Git repo if not already initialized
 if not exist ".git" (
     echo [INFO] Git repository not found. Initializing...
     git init
@@ -47,12 +71,15 @@ if not exist ".git" (
     )
 )
 
-:: 3. Show status of modified/new files
+:: Ensure default branch name is main
+git branch -M main >nul 2>&1
+
+:: 4. Show status of modified/new files
 echo [INFO] Checking file changes...
 git status --short
 echo.
 
-:: 4. Prompt for commit message
+:: 5. Prompt for commit message
 set "commit_msg="
 set /p commit_msg="Enter commit message (Press ENTER for auto timestamp): "
 
@@ -67,17 +94,21 @@ git add .
 echo [INFO] Committing changes...
 git commit -m "%commit_msg%"
 
+:: Check if HEAD commit exists
+git rev-parse --verify HEAD >nul 2>&1
 if %errorlevel% neq 0 (
-    echo [NOTE] No new changes to commit.
+    echo.
+    echo [ERROR] No commits exist in this repository to push!
+    echo Please verify your git configuration.
+    echo.
+    pause
+    exit /b 1
 )
 
-:: 5. Get current branch name (default to main)
-for /f "tokens=*" %%i in ('git branch --show-current 2^>nul') do set "CURRENT_BRANCH=%%i"
-if "%CURRENT_BRANCH%"=="" set "CURRENT_BRANCH=main"
-
+:: 6. Push to GitHub
 echo.
-echo [INFO] Pushing to GitHub (%CURRENT_BRANCH%)...
-git push -u origin %CURRENT_BRANCH%
+echo [INFO] Pushing to GitHub (main)...
+git push -u origin main
 
 if %errorlevel% equ 0 (
     echo.
@@ -88,22 +119,41 @@ if %errorlevel% equ 0 (
 ) else (
     echo.
     echo ===================================================
-    echo  [WARNING] Push failed or remote has newer changes.
+    echo  [WARNING] Push failed.
+    echo  This usually happens if the remote repository has
+    echo  commits that you do not have locally (e.g. README/License).
     echo ===================================================
     echo.
-    set /p retry_pull="Do you want to pull with rebase and retry push? (Y/N): "
-    if /i "!retry_pull!"=="Y" (
+    echo Options:
+    echo  [1] Pull remote changes and merge (Recommended)
+    echo  [2] Force push (Overwrites remote with your local code)
+    echo  [3] Exit
+    echo.
+    set /p choice="Select an option (1, 2, or 3): "
+    
+    if "!choice!"=="1" (
         echo.
-        echo [INFO] Pulling latest changes from remote...
-        git pull --rebase origin %CURRENT_BRANCH%
+        echo [INFO] Pulling remote changes with rebase...
+        git pull origin main --rebase --allow-unrelated-histories
         echo [INFO] Retrying push...
-        git push -u origin %CURRENT_BRANCH%
+        git push -u origin main
         if !errorlevel! equ 0 (
             echo.
             echo [SUCCESS] Push completed successfully!
         ) else (
             echo.
-            echo [ERROR] Push failed. Please verify your internet connection or GitHub login.
+            echo [ERROR] Push failed. If there are merge conflicts, please resolve them.
+        )
+    ) else if "!choice!"=="2" (
+        echo.
+        echo [INFO] Force pushing to main...
+        git push -u origin main --force
+        if !errorlevel! equ 0 (
+            echo.
+            echo [SUCCESS] Force push completed successfully!
+        ) else (
+            echo.
+            echo [ERROR] Force push failed. Please check your GitHub permissions.
         )
     )
 )
