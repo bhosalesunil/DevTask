@@ -1,0 +1,18 @@
+{
+  "name": "devtask-root",
+  "version": "1.0.0",
+  "description": "DevTask - Full Stack Project Management Platform",
+  "main": "server/server.js",
+  "scripts": {
+    "install-all": "npm install && npm run install-server && npm run install-client",
+    "install-server": "cd server && npm install",
+    "install-client": "cd client && npm install",
+    "server": "cd server && npm run dev",
+    "client": "cd client && npm run dev",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "seed": "cd server && npm run seed"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
